@@ -23,6 +23,7 @@ void draw_house_icon(ssd1306_t *ssd, uint8_t x, uint8_t y, uint8_t width, uint8_
 
 void display_message(ssd1306_t *ssd, const char *line1, const char *line2) {
     ssd1306_fill(ssd, false); // Limpa buffer antes de desenhar
+    ssd1306_rect(ssd, 0, 0, 127, 63, true, false);
     if (line1) ssd1306_draw_string(ssd, line1, 4, 0);
     if (line2) ssd1306_draw_string(ssd, line2, 4, 64 / 2 - 8);
     ssd1306_send_data(ssd); // Envia para o display físico

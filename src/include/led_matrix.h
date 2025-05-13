@@ -9,7 +9,6 @@ void led_matrix_clear();
 // FUNÇÕES NOVAS A SEREM IMPLEMENTADAS em led_matrix.c
 void led_matrix_draw_water_drop(void);
 void led_matrix_draw_light_icon(void);
-// void led_matrix_draw_standby_icon(void); // Opcional
 
 // Suas funções existentes, se for usar de alguma forma:
 // void led_matrix_ped_walk(void);

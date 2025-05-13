@@ -88,9 +88,8 @@ void led_matrix_clear() {
  * @brief Desenha um ícone de gota d'água na matriz de LEDs.
  *        Usa a cor COLOR_BLUE_WATER.
  */
-void led_matrix_draw_water_drop(void) {
-    uint32_t pio_water_color = color_to_pio_format(COLOR_BLUE_WATER, 1.0f); // Brilho 1.0f aqui usa o brilho já embutido na cor
-    led_matrix_clear(); // Limpa a matriz antes de desenhar o novo ícone
+void led_matrix_draw_water_drop() {
+    uint32_t pio_water_color = color_to_pio_format(COLOR_BLUE_WATER, 0.4f); // Brilho 1.0f aqui usa o brilho já embutido na cor
 
     // Linha 1 (topo da gota)
     led_active_position(1, 3, pio_water_color);
@@ -115,14 +114,12 @@ void led_matrix_draw_water_drop(void) {
 }
 
 /**
- * @brief Desenha um ícone de luz/sol na matriz de LEDs.
+ * @brief Desenha um ícone de sol na matriz de LEDs.
  *        Usa a cor COLOR_YELLOW_LIGHT.
  */
-void led_matrix_draw_light_icon(void) {
-    uint32_t pio_light_color = color_to_pio_format(COLOR_YELLOW_LIGHT, 1.0f);
-    led_matrix_clear(); // Limpa a matriz
+void led_matrix_draw_light_icon() {
+    uint32_t pio_light_color = color_to_pio_format(COLOR_YELLOW_LIGHT, 0.4f);
 
-    // Desenho de um sol/lâmpada simples (5x5)
     // Centro
     led_active_position(3, 3, pio_light_color);
     // "Raios" ou corpo da lâmpada
