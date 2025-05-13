@@ -170,8 +170,6 @@ A função `user_request` no servidor C interpreta as URLs enviadas pelos botõe
 └── pico_sdk_import.cmake   # Padrão do SDK
 ```
 
-*(A estrutura exata dos diretórios `src/` vs. arquivos `.c` na raiz depende da sua preferência de organização).*
-
 ## Demonstrativo em Vídeo
 
 [[Link para o seu Vídeo de Demonstração da Atividade 1]](https://drive.google.com/drive/folders/1CdSdQ_Fl-S2tXVT6iayEbYfwUgxTDNqq?usp=sharing)
