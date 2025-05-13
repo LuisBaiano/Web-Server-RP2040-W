@@ -1,4 +1,3 @@
-
 # Monitor Agrícola Inteligente: Webserver para Visualização e Controle (Fase 1 - simulado)
 
 ## Índice
@@ -175,10 +174,4 @@ A função `user_request` no servidor C interpreta as URLs enviadas pelos botõe
 
 ## Demonstrativo em Vídeo
 
-[Link para o seu Vídeo de Demonstração da Atividade 1]
-
-*(Lembre-se de gravar um vídeo mostrando a tela OLED, a Matriz de LEDs, o LED RGB e a página web funcionando e interagindo).*
-
----
-
-Esta ficha deve ser bem completa e alinhada com a sua implementação. Certifique-se de preencher seus dados e os links no final!
+[[Link para o seu Vídeo de Demonstração da Atividade 1]](https://drive.google.com/drive/folders/1CdSdQ_Fl-S2tXVT6iayEbYfwUgxTDNqq?usp=sharing)
