@@ -1,3 +1,17 @@
+# == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
+if(WIN32)
+    set(USERHOME $ENV{USERPROFILE})
+else()
+    set(USERHOME $ENV{HOME})
+endif()
+set(sdkVersion 2.1.1)
+set(toolchainVersion 14_2_Rel1)
+set(picotoolVersion 2.1.1)
+set(picoVscode ${USERHOME}/.pico-sdk/cmake/pico-vscode.cmake)
+if (EXISTS ${picoVscode})
+    include(${picoVscode})
+endif()
+# ====================================================================================
 
 set(PICO_BOARD pico_w CACHE STRING "Board type")
 
@@ -13,13 +27,14 @@ pico_sdk_init()
 add_executable(${CMAKE_PROJECT_NAME}
     main.c 
     include/lib/ssd1306/ssd1306.c
-    include/buttons.c
     include/buzzer.c
     include/debouncer.c
     include/display.c
     include/led_matrix.c
     include/joystick.c
-    include/rgb_led.c    
+    include/rgb_led.c  
+    include/external/dht22.c  
+    include/external/ldr.c  
 )
 
 pico_generate_pio_header(${CMAKE_PROJECT_NAME} ${CMAKE_CURRENT_SOURCE_DIR}/include/pio/led_matrix.pio)
@@ -33,6 +48,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     hardware_clocks
     hardware_irq
     hardware_pio
+    hardware_timer
     pico_bootrom
     pico_cyw43_arch_lwip_threadsafe_background 
 )

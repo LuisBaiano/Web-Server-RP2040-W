@@ -2,6 +2,8 @@
 // ----- INCLUDES DO PROJETO -----
 #include "include/config.h"
 #include "include/display.h"
+#include "include/external/dht22.h"
+#include "include/external/ldr.h"
 #define REQUESTFER_SIZE 2048
 
 
@@ -12,16 +14,16 @@
 // ----- GLOBAIS -----
 static ssd1306_t ssd_global;
 static char pico_ip_address[20] = "N/A";
+static uint32_t last_dht_read_time = 0;
 
 // Variáveis Globais para Simulação
-static float g_temperatura_ar_simulada = 25.0f;
-static float g_umidade_ar_simulada = 60.0f;
-static bool g_luminosidade_claro = true;
-static bool g_estado_rele_irrigacao = false;
-static bool g_estado_rele_luz = false;
 
-typedef enum { RESERVATORIO_ALTO, RESERVATORIO_MEDIO, RESERVATORIO_BAIXO } nivel_reservatorio_t;
-static nivel_reservatorio_t g_nivel_reservatorio_simulado_enum = RESERVATORIO_ALTO;
+static float temp_ar = 0.0f;
+static float umid_ar = 0.0f;
+static float luminosidade = 0.0f;
+static float reservatorio = 0.0f;
+static bool rele_irrigacao = false;
+static bool rele_luz = false;
 
 // ----- PROTÓTIPOS -----
 static err_t tcp_server_accept(void *arg, struct tcp_pcb *newpcb, err_t err);
@@ -32,17 +34,18 @@ void user_request(char **request_str_ptr);
 int main() {
     stdio_init_all();
     sleep_ms(500);
+    adc_init();
 
     // ----- INICIALIZAÇÃO DE PERIFÉRICOS -----
     printf("Inicializando perifericos...\n");
-    buttons_init(); // Configura BUTTON_A_PIN e BUTTON_B_PIN
+    dht22_init_sensor();
+    ldr_init_sensor();
     joystick_init();
     rgb_led_init();
     led_matrix_init();
     led_matrix_clear();
     display_init(&ssd_global);
 
-    // update_rgb_led_by_status(RGB_STATUS_OFF); // Se usar RGB de status
     display_startup_screen(&ssd_global);
     display_message(&ssd_global, "Sistema OK", "Iniciando WiFi...");
 
@@ -52,7 +55,6 @@ int main() {
 
     if (cyw43_arch_init_with_country(CYW43_COUNTRY_BRAZIL)) {
         printf("ERRO FATAL: cyw43_arch_init falhou\n");
-        // update_rgb_led_by_status(RGB_STATUS_ERROR_WIFI_SYSTEM);
         display_message(&ssd_global, "ERRO FATAL", "WiFi Init Falhou");
         rgb_led_set(RGB_ERROR);
         return -1;
@@ -121,6 +123,9 @@ int main() {
     // ----- LOOP PRINCIPAL -----
     printf("Entrando no loop principal.\n");
     uint32_t last_oled_update_time = 0;
+    uint32_t last_ldr_read_time = 0;
+    uint32_t last_joy_read_time = 0;
+    
 
     while (true) {
         cyw43_arch_poll(); 
@@ -128,31 +133,38 @@ int main() {
         uint16_t adc_x = read_adc(JOYSTICK_X_ADC_CHANNEL);
         uint16_t adc_y = read_adc(JOYSTICK_Y_ADC_CHANNEL);
 
-        g_umidade_ar_simulada = 30.0f + (adc_x / 4095.0f) * 60.0f;
-        g_temperatura_ar_simulada = 10.0f + (adc_y / 4095.0f) * 30.0f;
-
-        if (button_a_pressed()) {
-            g_luminosidade_claro = !g_luminosidade_claro;
-            printf("Luminosidade Sim.: %s\n", g_luminosidade_claro ? "CLARO" : "ESCURO");
+        if (time_us_32() - last_ldr_read_time > (LDR_READ_TIME_MS * 1000)) {
+            luminosidade = ldr_read_percentage();
         }
 
-        if (button_b_pressed()) {
-            switch (g_nivel_reservatorio_simulado_enum) {
-                case RESERVATORIO_ALTO:  g_nivel_reservatorio_simulado_enum = RESERVATORIO_MEDIO; printf("Reserv.: MEDIO\n"); break;
-                case RESERVATORIO_MEDIO: g_nivel_reservatorio_simulado_enum = RESERVATORIO_BAIXO; printf("Reserv.: BAIXO\n"); break;
-                case RESERVATORIO_BAIXO: g_nivel_reservatorio_simulado_enum = RESERVATORIO_ALTO;  printf("Reserv.: ALTO\n"); break;
+        //leitura continua do dht22 para obter a temperatura e a umidade
+        if (time_us_32() - last_dht_read_time > (DHT_READ_TIME_MS * 1000)) {
+            float temp_dht, hum_dht;
+            printf("Lendo DHT22...\n");
+            if (dht_read_data(&temp_dht, &hum_dht)) {
+                temp_ar = temp_dht; // Atualiza globais com dados reais
+                umid_ar = hum_dht;
+                printf("DHT22 Leitura OK: Temperatura = %.1f C, Umidade = %.1f%% \n", temp_ar, umid_ar);
+            } else {
+                printf("Falha ao ler DHT22.\n");
+
             }
+            last_dht_read_time = time_us_32();
         }
+
+        if (time_us_32() - last_joy_read_time > (JOY_READ_TIME_MS * 1000)) {
+            reservatorio = joytisck_read_percentage();
+        }
+
 
         // Atualiza OLED periodicamente
         if (time_us_32() - last_oled_update_time > 500000) {
-            ssd1306_fill(&ssd_global, false); // Limpa tela
+            ssd1306_fill(&ssd_global, false);
 
-            uint8_t x = 0, y = 0, w = 128, h = 60; // Reduzido para evitar corte
-            uint8_t col_x = x + 70; // Coluna mais à direita
+            uint8_t x = 0, y = 0, w = 128, h = 60; 
+            uint8_t col_x = x + 65; 
             uint8_t row_h = 12;
 
-            // Moldura externa
             ssd1306_rect(&ssd_global, y, x, w, h, true, false);
 
             // Linha divisória horizontal (cabeçalho)
@@ -163,30 +175,34 @@ int main() {
             ssd1306_vline(&ssd_global, col_x, y, y + h, true);
             // Cabeçalhos
             ssd1306_draw_string(&ssd_global, "Param", x + 2, y + 2);
-            ssd1306_draw_string(&ssd_global, "Valor", col_x + 2, y + 2);
+            ssd1306_draw_string(&ssd_global, "Valor", col_x + 5, y + 2);
             // Linha 1
             ssd1306_draw_string(&ssd_global, "Temp.", x + 2, y + 2 + row_h);
             char temp_str[12];
-            snprintf(temp_str, sizeof(temp_str), "%.1f C", g_temperatura_ar_simulada);
-            ssd1306_draw_string(&ssd_global, temp_str, col_x + 2, y + 2 + row_h);
+            snprintf(temp_str, sizeof(temp_str), "%.1f C", temp_ar);
+            ssd1306_draw_string(&ssd_global, temp_str, col_x + 5, y + 2 + row_h);
             // Linha 2
             ssd1306_draw_string(&ssd_global, "Umidade", x + 2, y + 2 + row_h * 2);
             char umid_str[12];
-            snprintf(umid_str, sizeof(umid_str), "%.1f %%", g_umidade_ar_simulada);
-            ssd1306_draw_string(&ssd_global, umid_str, col_x + 2, y + 2 + row_h * 2);
+            snprintf(umid_str, sizeof(umid_str), "%.1f %%", umid_ar);
+            ssd1306_draw_string(&ssd_global, umid_str, col_x + 5, y + 2 + row_h * 2);
             // Linha 3
             ssd1306_draw_string(&ssd_global, "Luz", x + 2, y + 2 + row_h * 3);
-            const char* lum_str = g_luminosidade_claro ? "CLARO" : "ESCURO";
-            ssd1306_draw_string(&ssd_global, lum_str, col_x + 2, y + 2 + row_h * 3);
+            const char* lum_str;
+            if (luminosidade > 66.0f) lum_str = "ALTA";
+            else if (luminosidade > 33.0f) lum_str = "MEDIA";
+            else lum_str = "ESCURO";
+            ssd1306_draw_string(&ssd_global, lum_str, col_x + 5, y + 2 + row_h * 3);
             // Linha 4
             ssd1306_draw_string(&ssd_global, "Reserv.", x + 2, y + 2 + row_h * 4);
             const char* res_str;
-            switch (g_nivel_reservatorio_simulado_enum) {
-                case RESERVATORIO_ALTO:  res_str = "ALTO"; break;
-                case RESERVATORIO_MEDIO: res_str = "MEDIO"; break;
-                default:                 res_str = "BAIXO"; break;
+            if (reservatorio > 66.0f) res_str = "ALTO";
+            else if (reservatorio > 33.0f) res_str = "MEDIO";
+            else{
+                res_str = "BAIXO";
+                buzzer_play_tone(BUZZER_ALERT_FREQ, BUZZER_ALERT_ON_MS);
             }
-            ssd1306_draw_string(&ssd_global, res_str, col_x + 2, y + 2 + row_h * 4);
+            ssd1306_draw_string(&ssd_global, res_str, col_x + 5, y + 2 + row_h * 4);
 
             last_oled_update_time = time_us_32();
             //envia os dados para o dispaly
@@ -218,19 +234,19 @@ void user_request(char **request_str_ptr) {
 
     if (strstr(req, "GET /irrigacao_on")) {
         led_matrix_draw_water_drop();
-        g_estado_rele_irrigacao = true;
+        rele_irrigacao = true;
         printf("USER_REQUEST: Irrigacao LIGADA (Matriz: Gota)\n");
     } else if (strstr(req, "GET /irrigacao_off")) {
-        g_estado_rele_irrigacao = false;
-        if (!g_estado_rele_luz) led_matrix_clear(); else led_matrix_draw_light_icon();
+        rele_irrigacao = false;
+        if (!rele_luz) led_matrix_clear(); else led_matrix_draw_light_icon();
         printf("USER_REQUEST: Irrigacao DESLIGADA\n");
     } else if (strstr(req, "GET /luz_on")) {
         led_matrix_draw_light_icon();
-        g_estado_rele_luz = true;
+        rele_luz = true;
         printf("USER_REQUEST: Luz LIGADA (Matriz: Luz)\n");
     } else if (strstr(req, "GET /luz_off")) {
-        g_estado_rele_luz = false;
-        if (!g_estado_rele_irrigacao) led_matrix_clear(); else led_matrix_draw_water_drop();
+        rele_luz = false;
+        if (!rele_irrigacao) led_matrix_clear(); else led_matrix_draw_water_drop();
         printf("USER_REQUEST: Luz DESLIGADA\n");
     }
 }
@@ -255,16 +271,25 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
     char *request_ptr_local = requestfer;
     user_request(&request_ptr_local);
 
-    const char* luminosidade_atual_str = g_luminosidade_claro ? "CLARO" : "ESCURO";
-    const char* reservatorio_nivel_str_html;
-    switch (g_nivel_reservatorio_simulado_enum) {
-        case RESERVATORIO_ALTO:  reservatorio_nivel_str_html = "ALTO";  break;
-        case RESERVATORIO_MEDIO: reservatorio_nivel_str_html = "MEDIO"; break;
-        case RESERVATORIO_BAIXO: reservatorio_nivel_str_html = "BAIXO"; break;
-        default:                 reservatorio_nivel_str_html = "N/D";   break;
+    char luminosidade_atual_str[15]; 
+    if (luminosidade > 75.0f) { 
+        strcpy(luminosidade_atual_str, "ALTA");
+    } else if (luminosidade > 25.0f) {
+        strcpy(luminosidade_atual_str, "MEDIA");
+    } else {
+        strcpy(luminosidade_atual_str, "BAIXA");
     }
-    const char* irrigacao_atual_str = g_estado_rele_irrigacao ? "LIGADO" : "DESLIGADO";
-    const char* luz_atual_str = g_estado_rele_luz ? "LIGADO" : "DESLIGADO";
+    char reservatorio_nivel_str[15]; 
+    if (reservatorio > 75.0f) {
+        strcpy(reservatorio_nivel_str, "ALTO");
+    } else if (reservatorio > 25.0f) {
+        strcpy(reservatorio_nivel_str, "MEDIO");
+    } else {
+        strcpy(reservatorio_nivel_str, "BAIXO");
+    }
+
+    const char* irrigacao_atual_str = rele_irrigacao ? "LIGADO" : "DESLIGADO";
+    const char* luz_atual_str = rele_luz ? "LIGADO" : "DESLIGADO";
 
     char html[4096];
     snprintf(html, sizeof(html),
@@ -316,15 +341,14 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
             "    .catch(err => console.error('Erro ao buscar dados:', err));"
             "}"
             "// Função para recarregar a página a cada 0.5 segundos"
-            "setTimeout(function(){ window.location.href = \"/\"; }, 500);"  // Intervalo de 5000 milissegundos (5 segundos)
-            "setInterval(updateValues, 500);"
+            "setInterval(function(){location.href = \"/\"; }, 5000);"
             "window.onload = updateValues;" // Atualiza assim que a página carrega também
             "</script>"
             "</body></html>", // Fechamentos corretos
-            g_temperatura_ar_simulada,
-            g_umidade_ar_simulada,
+            temp_ar,
+            umid_ar,
             luminosidade_atual_str,
-            reservatorio_nivel_str_html,
+            reservatorio_nivel_str,
             irrigacao_atual_str,
             luz_atual_str  
             );

@@ -71,7 +71,7 @@ void display_message(ssd1306_t *ssd, const char *line1, const char *line2) {
      // Define as strings a serem exibidas
     const char *line1 = "EMBARCATECH";
     const char *line2 = "PROJETO";
-    const char *line3 = "WEB SERVER PT1";
+    const char *line3 = "WEB SERVER PT2";
     ssd1306_draw_string(ssd, line1, center_x_approx - (strlen(line1)*8)/2, start_y);
     ssd1306_draw_string(ssd, line2, center_x_approx - (strlen(line2)*8)/2, start_y + line_height);
     ssd1306_draw_string(ssd, line3, center_x_approx - (strlen(line3)*8)/2, start_y + 2*line_height);

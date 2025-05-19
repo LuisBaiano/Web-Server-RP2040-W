@@ -87,6 +87,5 @@ static void play_tone_internal(uint freq, uint duration_ms) {
  */
 void buzzer_play_tone(uint freq, uint duration_ms) {
     // Chama a função interna que lida com a lógica do PWM.
-    // A função interna já trata freq=0 e duration_ms=0/ >0.
     play_tone_internal(freq, duration_ms);
 }
