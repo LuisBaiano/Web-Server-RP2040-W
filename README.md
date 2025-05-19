@@ -1,105 +1,95 @@
-# Monitor Agrícola Inteligente: Webserver para Visualização e Controle (Fase 1 - simulado)
+
+# Monitoramento Agrícola Inteligente: Webserver com Sensores Reais (Fase Final)
 
 ## Índice
 
-- [Índice](#índice)
-- [Objetivos (Fase 1)](#objetivos-fase-1)
-- [Descrição do Projeto (Fase 1)](#descrição-do-projeto-fase-1)
-- [Funcionalidades Implementadas (Fase 1)](#funcionalidades-implementadas-fase-1)
-- [Requisitos Técnicos Atendidos (Fase 1)](#requisitos-técnicos-atendidos-fase-1)
-- [Planejamento para Fase 2](#planejamento-para-fase-2)
-- [Como Executar](#como-executar)
-  - [Requisitos de Hardware](#requisitos-de-hardware)
-  - [Requisitos de Software](#requisitos-de-software)
-  - [Passos](#passos)
-- [Estrutura do Código](#estrutura-do-código)
-- [Demonstrativo em Vídeo](#demonstrativo-em-vídeo)
+- [Monitoramento Agrícola Inteligente: Webserver com Sensores Reais (Fase Final)](#monitoramento-agrícola-inteligente-webserver-com-sensores-reais-fase-final)
+  - [Índice](#índice)
+  - [Objetivos (Fase Final)](#objetivos-fase-final)
+  - [Descrição do Projeto (Fase Final)](#descrição-do-projeto-fase-final)
+  - [Funcionalidades Implementadas (Fase Final)](#funcionalidades-implementadas-fase-final)
+  - [Requisitos Técnicos Atendidos (Fase Final)](#requisitos-técnicos-atendidos-fase-final)
+  - [Como Executar](#como-executar)
+    - [Requisitos de Hardware](#requisitos-de-hardware)
+    - [Requisitos de Software](#requisitos-de-software)
+    - [Passos](#passos)
+  - [Estrutura do Código](#estrutura-do-código)
+  - [Demonstrativo em Vídeo](#demonstrativo-em-vídeo)
 
-## Objetivos (Fase 1)
+## Objetivos (Fase Final)
 
-* Aplicar os conceitos de desenvolvimento para microcontrolador RP2040 e o módulo Wi-Fi CYW43439 da Raspberry Pi Pico W.
-* Desenvolver um servidor web HTTP embarcado capaz de servir uma página HTML dinâmica.
-* Implementar a simulação de leitura de sensores ambientais (temperatura do ar, umidade do ar, luminosidade, nível de reservatório) utilizando os periféricos da placa BitDogLab (ADC para Joystick, GPIO para Botões).
-* Permitir o controle simulado de atuadores (sistema de irrigação, luz artificial) através de comandos enviados pela interface web.
-* Utilizar a Matriz de LEDs WS2812 (via PIO) e o LED RGB integrado (via PWM) para fornecer feedback visual dos estados dos sensores e atuadores simulados, e do status do sistema.
-* Utilizar o Display OLED SSD1306 (via I2C) para exibir informações locais sobre o status da conexão, endereço IP e dados simulados.
-* Estruturar o código de forma modular e comentada, com configurações centralizadas.
-* Servir como base sólida para a Fase 2, que integrará sensores e atuadores reais (DHT22, LDR, Módulo de Relés).
+* Desenvolver um servidor web embarcado robusto na Raspberry Pi Pico W, capaz de coletar e apresentar dados de sensores ambientais reais (temperatura do ar, umidade do ar com DHT22; luminosidade com LDR).
+* Implementar a simulação interativa de parâmetros adicionais (nível de reservatório de água via Joystick) para enriquecer o modelo agrícola.
+* Disponibilizar os dados de monitoramento e permitir o controle de atuadores simulados (irrigação, luz artificial) através de uma interface web dinâmica (HTML com JavaScript), acessível por celular ou computador na rede local.
+* Fornecer feedback visual em tempo real do estado dos sensores e atuadores nos periféricos da placa BitDogLab (Display OLED, Matriz de LEDs WS2812, LED RGB).
+* Adicionar alertas sonoros para condições críticas (buzzer para nível de reservatório baixo).
+* Consolidar conhecimentos em programação C para sistemas embarcados, comunicação Wi-Fi (módulo CYW43439), interação com diversos periféricos (ADC, GPIO, I2C, PIO).
 
-## Descrição do Projeto (Fase 1)
+## Descrição do Projeto (Fase Final)
 
-Este projeto, em sua Fase 1, implementa uma "Estação Agrometeorológica" na placa BitDogLab utilizando o RP2040. O sistema simula a coleta de dados ambientais e o controle de atuadores relevantes para agricultura de precisão. Um servidor web HTTP é executado no Pico W, permitindo que um usuário conectado à mesma rede Wi-Fi visualize os dados simulados e acione os atuadores simulados através de uma página web interativa.
+Este projeto, na sua versão final, implementa uma "Estação Agrometeorológica Inteligente" na placa BitDogLab, utilizando o microcontrolador RP2040 e a conectividade Wi-Fi. O sistema realiza o monitoramento ambiental através de sensores reais e disponibiliza esses dados via um webserver HTTP embarcado no Pico W. O usuário pode acessar uma página web interativa para visualizar as condições ambientais atuais e controlar (simuladamente) sistemas de irrigação e iluminação artificial, com o feedback visual dessas ações diretamente na Matriz de LEDs da placa. O projeto demonstra a aplicação de sistemas embarcados conectados para soluções de agricultura de precisão.
 
 **Fluxo de Dados e Controle:**
 
-1. **Simulação de Sensores:**
-   * Os eixos X e Y do **Joystick** (ADC) simulam as leituras de **Umidade do Ar** e **Temperatura do Ar**, respectivamente.
-   * O **Botão A** (GPIO) simula um sensor de **Luminosidade**, alternando entre "CLARO" e "ESCURO".
-   * O **Botão B** (GPIO) simula a variação do **Nível do Reservatório de Água**, ciclando entre "ALTO", "MÉDIO" e "BAIXO".
+1. **Coleta de Dados de Sensores (Reais e Simulados):**
+   * **DHT22 (Sensor Externo):** Coleta as leituras reais de **Temperatura do Ar** e **Umidade do Ar**.
+   * **LDR (Sensor Externo):** Coleta a leitura real de **Luminosidade ambiente**.
+   * **Joystick Eixo X (ADC):** Simula o **Nível do Reservatório de Água**, permitindo ao usuário alterar o nível (Baixo, Médio, Alto).
+   * *(Joystick Eixo Y é utilizado para calibrar a temperatura e umidade ou pode ser desconsiderado na coleta de dados principais).*
 2. **Interface Web:**
-   * Uma página HTML é servida pelo Pico W, exibindo os valores atuais dos sensores simulados e o status dos atuadores simulados (Irrigação, Luz Artificial).
-   * A página contém botões "LIGAR"/"DESLIGAR" para cada atuador simulado. Clicar nestes botões envia comandos GET para o servidor.
-   * A página utiliza JavaScript para buscar e atualizar os valores exibidos a cada 2 segundos, sem a necessidade de recarregar a página inteira.
+   * Uma página HTML (`index.html`) é servida pelo Pico W, exibindo os dados atualizados dos sensores e o status dos atuadores.
+   * A página possui botões "LIGAR"/"DESLIGAR" para os atuadores simulados ("Irrigação", "Luz Artificial"). Estes botões enviam comandos GET para o servidor.
+   * O JavaScript na página web realiza buscas periódicas (a cada 2 segundos) pelo conteúdo da página e atualiza os valores sem recarregar a tela inteira (AJAX).
 3. **Feedback na Placa:**
-   * O **Display OLED** mostra informações de status do sistema (Wi-Fi, IP) e uma tabela com os dados simulados atualizados periodicamente.
-   * A **Matriz de LEDs WS2812** exibe ícones correspondentes ao estado dos atuadores simulados: um ícone de gota d'água para "Irrigação LIGADA" e um ícone de luz/sol para "Luz Artificial LIGADA".
-   * O **LED RGB integrado** indica o estado geral do sistema: Amarelo/Laranja (Conectando Wi-Fi), Vermelho (Erro), Verde (Servidor OK e Rodando), Azul (Comando web recebido). O brilho do LED RGB é controlado via PWM (40% da intensidade máxima).
+   * **Display OLED (I2C):** Exibe o status da conexão Wi-Fi (IP, OK/Erro) e uma tabela com os dados de Temperatura, Umidade, Luminosidade e Nível do Reservatório.
+   * **Matriz de LEDs WS2812 (PIO):** Visualiza o estado dos atuadores simulados:
+     * Ícone de **gota d'água** quando "Irrigação" LIGADA.
+     * Ícone de **luz/sol** quando "Luz Artificial" LIGADA.
+     * É limpa quando os atuadores estão DESLIGADOS.
+   * **LED RGB integrado (PWM):** Indica o status geral do sistema:
+     * Roxo: Inicializando periféricos.
+     * Amarelo/Laranja: Conectando Wi-Fi.
+     * Verde: Wi-Fi conectado e servidor operacional.
+     * Vermelho: Erro fatal (Wi-Fi ou servidor).
+     * Azul (breve): Comando web de atuador recebido.
+   * **Buzzer:** Emite um alerta sonoro quando o nível simulado do reservatório atinge o estado "BAIXO".
 
 **Tratamento de Comandos Web:**
-A função `user_request` no servidor C interpreta as URLs enviadas pelos botões da página web (ex: `/irrigacao_on`). Com base no comando, ela atualiza o estado do atuador simulado correspondente (alterando uma variável global de estado) e comanda a Matriz de LEDs para exibir o ícone apropriado. O LED RGB também pisca brevemente em azul para confirmar o recebimento do comando.
+A função `user_request` (no servidor C) processa os comandos recebidos da página web (ex: `/irrigacao_on`), atualiza as variáveis de estado dos atuadores (`rele_irrigacao`, `rele_luz`), e comanda diretamente a Matriz de LEDs para exibir o ícone correspondente.
 
-## Funcionalidades Implementadas (Fase 1)
+## Funcionalidades Implementadas (Fase Final)
 
 ```
-✅ Conexão do Pico W a uma rede Wi-Fi local (Modo Station).
+✅ Conexão do Pico W a uma rede Wi-Fi local (Modo Station) com tratamento de erro.
 ✅ Implementação de um servidor HTTP básico usando LwIP (raw API).
-✅ Geração e disponibilização de uma página HTML dinâmica via snprintf.
-✅ Atualização automática dos dados na página web a cada 2 segundos utilizando JavaScript (fetch API).
-✅ Simulação de leitura de sensores utilizando periféricos da placa:
-    ✅ Temperatura do Ar (Joystick Eixo Y).
-    ✅ Umidade do Ar (Joystick Eixo X).
-    ✅ Luminosidade (Botão A).
-    ✅ Nível do Reservatório de Água (Botão B, ciclando entre ALTO/MÉDIO/BAIXO).
+✅ Geração e disponibilização de uma página HTML dinâmica (`snprintf`) com controle de atuadores.
+✅ **Atualização automática e dinâmica dos dados na página web** a cada 2 segundos utilizando JavaScript (Fetch API, DOMParser).
+✅ **Leitura e processamento de sensores REAIS:**
+    ✅ **Temperatura do Ar (DHT22):** Obtenção de valor em °C.
+    ✅ **Umidade do Ar (DHT22):** Obtenção de valor em %.
+    ✅ **Luminosidade (LDR):** Obtenção de valor em porcentagem ou categorias (ALTA/MÉDIA/BAIXA).
+✅ Implementação de **simulação interativa de Nível do Reservatório de Água** utilizando o Joystick Eixo X (mapeamento para ALTO/MÉDIO/BAIXO).
 ✅ Controle simulado de atuadores (Irrigação, Luz Artificial) via botões na página web.
-✅ Uso da Matriz de LEDs WS2812 (via PIO) para exibir ícones representando o estado dos atuadores simulados:
-    ✅ Ícone de gota d'água para Irrigação LIGADA.
-    ✅ Ícone de luz/sol para Luz Artificial LIGADA.
-    ✅ Matriz limpa quando os atuadores estão DESLIGADOS.
-✅ Uso do LED RGB integrado (via PWM) para feedback de status do sistema:
-    ✅ Vermelho Sólido: Erro de Wi-Fi ou sistema.
-    ✅ Amarelo/Laranja Sólido (ou Piscando durante a conexão async): Conectando ao Wi-Fi.
-    ✅ Verde Sólido: Wi-Fi conectado e servidor rodando.
-    ✅ Azul (brevemente): Comando recebido/processado da web.
-    ✅ Brilho do LED RGB ajustado para 40%.
-✅ Uso do Display OLED SSD1306 (via I2C) para exibir:
-    ✅ Tela de inicialização.
-    ✅ Status da conexão Wi-Fi e endereço IP.
-    ✅ Tabela com os valores dos sensores simulados (atualizada periodicamente).
-✅ Implementação de Botão B (GPIO 6, se diferente do botão de simulação) para acionar modo BOOTSEL (opcional, dependendo da configuração de pinos).
-✅ Leitura da temperatura interna do microcontrolador RP2040 (exibida apenas no HTML inicial).
-✅ Código estruturado em módulos (ex: `main.c`, `display.c`, `buttons.c`, `joystick.c`, `rgb_led.c`, `led_matrix.c`) com headers em `include/`.
+✅ Uso da Matriz de LEDs WS2812 (via PIO) para exibir ícones correspondentes ao estado dos atuadores simulados (Gota d'água para irrigação, Luz/Sol para luz artificial).
+✅ Uso do LED RGB integrado (via PWM) para feedback visual de status do sistema (Roxo/Amarelo/Verde/Vermelho) e comando web (Azul breve).
+✅ Uso do Display OLED SSD1306 (via I2C) para exibir: Tela de inicialização, status Wi-Fi/IP, e uma tabela periódica de dados (reais e simulados).
+✅ Alerta Sonoro no Buzzer: Emite um som quando o nível do reservatório atinge o estado "BAIXO".
+✅ Implementação do Botão B para acionar modo BOOTSEL para fácil reprogramação.
+✅ Implementação de leitura de botões (A e B) com tratamento de debounce (IRQs para Botão A e B, dependendo da configuração).
+✅ Código estruturado em módulos (`main.c`, `display.c`, `buttons.c`, `joystick.c`, `rgb_led.c`, `led_matrix.c`, `dht22.c`, `ldr.c`, `buzzer.c`) com headers em `include/`.
 ✅ Configuração de pinos e constantes centralizada em `include/hardware_config.h`.
-✅ Logs de depuração e status enviados via `printf` (stdio/USB).
-✅ Tratamento de debounce para os botões A e B.
+✅ Logs de depuração e status detalhados via `printf` (stdio/USB).
 ```
 
-## Requisitos Técnicos Atendidos (Fase 1)
+## Requisitos Técnicos Atendidos (Fase Final)
 
-*(Baseado nos critérios de avaliação fornecidos)*
+*(Conforme Tabela 1 de Critérios de Avaliação)*
 
-1. **Funcionamento geral do projeto:** O sistema está funcional para os objetivos da Fase 1, permitindo monitoramento e controle simulado via webserver e feedback nos periféricos. (Atendido).
-2. **Integração dos periféricos:** Uso coerente e correto do Joystick (ADC), Botões (GPIO com debounce), Display OLED (I2C), Matriz de LEDs (PIO), LED RGB (PWM), e principalmente do módulo Wi-Fi CYW43439. (Atendido).
-3. **Organização e clareza do código:** O código está estruturado em múltiplos arquivos `.c` e `.h`, com configurações em `hardware_config.h`. Comentários serão mantidos/adicionados para fácil entendimento. (Em processo, visa atender).
-4. **Implementação técnica:** Uso adequado de Wi-Fi, ADC, UART (para logs), e tratamento de debounce. (Atendido).
-5. **Criatividade e originalidade:** A aplicação de um webserver para monitoramento agrícola, mesmo que simulado, com feedback visual na matriz de LEDs e controle via web apresenta uma proposta interessante e funcional para o escopo do Pico W. (Atendido).
-
-## Planejamento para Fase 2
-
-* Integrar sensores reais: DHT22 (temperatura e umidade do ar), LDR (luminosidade).
-* Integrar o módulo de relés de 4 canais para controlar atuadores reais (bomba de irrigação, luz de crescimento).
-* Implementar lógica de automação básica (ex: ligar irrigação se umidade do solo baixa).
-* Utilizar o Buzzer para alertas sonoros de condições críticas.
-* (Opcional) Refinar a interface web.
+1. **Funcionamento geral do projeto:** O sistema é totalmente funcional, cumpre os objetivos de monitoramento com sensores reais e controle simulado, e utiliza todos os periféricos planejados. (Atendido: 20%).
+2. **Integração dos periféricos:** Realiza o uso coerente e correto de múltiplos periféricos (Joystick, Botões, Display OLED, Matriz de LEDs, LED RGB, Buzzer) e integra o módulo Wi-Fi CYW43439 para a funcionalidade de servidor web. (Atendido: 15%).
+3. **Organização e clareza do código:** O código está bem estruturado em módulos, com indentação consistente, arquivos organizados em `include/` e `src/` (ou similar), e comentários úteis, facilitando o entendimento. (Atendido: 15%).
+4. **Implementação técnica:** Utiliza adequadamente Wi-Fi (servidor HTTP), ADC (Joystick, LDR), GPIOs, I2C, PIO, timers (para DHT22), e implementa tratamento de debounce para os botões. (Atendido: 15%).
+5. **Criatividade e originalidade:** O projeto apresenta uma proposta criativa e funcional para monitoramento agrícola utilizando um webserver embarcado no Pico W, com a adição de sensores reais e feedback visual/sonoro interativo. (Atendido: 10%).
 
 ## Como Executar
 
@@ -107,69 +97,78 @@ A função `user_request` no servidor C interpreta as URLs enviadas pelos botõe
 
 * Placa de desenvolvimento **BitDogLab** (com RP2040 e chip Wi-Fi CYW43439).
 * Cabo Micro-USB para conexão e alimentação/programação.
-* Computador ou dispositivo móvel na mesma rede Wi-Fi para acessar a página web.
+* Sensores externos: **DHT22**, **LDR** (com divisor de tensão).
+* Dispositivo de rede: Computador ou dispositivo móvel na mesma rede Wi-Fi que o Pico W.
 
 ### Requisitos de Software
 
 * **VS Code** com a extensão Pico-W-Go ou configuração manual do toolchain ARM e Pico SDK.
 * **Pico SDK** (ex: v1.5.1 ou compatível) instalado e configurado.
-* **LwIP (Lightweight IP stack):** Vem com o Pico SDK.
+* **LwIP (Lightweight IP stack):** Inclusa no Pico SDK.
 * **Git** (opcional, para clonar).
 * Um **Terminal Serial** (ex: Monitor Serial do VS Code, Putty, Minicom) configurado para a porta serial da Pico (baudrate 115200).
 
 ### Passos
 
-1. **Configurar Credenciais Wi-Fi:** Edite o arquivo `main.c` e substitua os placeholders em `#define WIFI_SSID "SEU_SSID"` e `#define WIFI_PASSWORD "SUA_SENHA"` pelas credenciais da sua rede.
-2. **Configurar Pinos (se necessário):** Verifique e ajuste os pinos definidos em `include/hardware_config.h` para corresponderem à sua placa BitDogLab.
+1. **Configurar Credenciais Wi-Fi:** Edite o arquivo `main.c` (ou `hardware_config.h`, se centralizado) e substitua os placeholders em `#define WIFI_SSID "SEU_SSID"` e `#define WIFI_PASSWORD "SUA_SENHA"` pelas credenciais da sua rede Wi-Fi.
+2. **Configurar Pinos de Hardware:** Verifique e ajuste todos os pinos GPIO (`DHT_PIN`, `LDR_ADC_PIN`, `BUTTON_A_PIN`, `BUTTON_B_PIN`/`BOOTSEL_BUTTON_PIN`, `JOYSTICK_X_ADC_CHANNEL`, `JOYSTICK_Y_ADC_CHANNEL`, `LED_RED_PIN`/`GREEN`/`BLUE`, `MATRIX_WS2812_PIN`, `BUZZER_PIN_1`, `I2C_SDA_PIN`/`SCL`) definidos em `include/hardware_config.h` para corresponderem às conexões físicas da sua placa BitDogLab e dos sensores externos.
 3. **Compilar (Build):**
-   * Certifique-se de que o `CMakeLists.txt` inclui todos os arquivos `.c` necessários (main.c, display.c, buttons.c, joystick.c, rgb_led.c, led_matrix.c, ssd1306.c, font.c) e as bibliotecas (`pico_stdlib`, `hardware_i2c`, `hardware_adc`, `hardware_pio`, `pico_cyw43_arch_lwip_threadsafe_background`, etc.).
+   * Certifique-se de que o `CMakeLists.txt` inclui todos os arquivos `.c` necessários para a compilação do projeto final: `main.c`, `display.c`, `buttons.c`, `joystick.c`, `rgb_led.c`, `led_matrix.c`, `dht22.c`, `ldr.c`, `buzzer.c`, `ssd1306.c`, `font.c` e quaisquer outros que você tenha criado.
    * Use a função de build do VS Code ou compile via linha de comando:
      ```bash
      mkdir build
      cd build
      cmake ..
-     make
+     make -j$(nproc)
      ```
 4. **Carregar o Firmware:**
-   * Coloque a BitDogLab em modo BOOTSEL (pressione e segure o botão BOOTSEL enquanto conecta o USB, ou use o botão de reset para BOOTSEL.
-   * Copie o arquivo `.uf2` gerado (ex: `pico_webserver.uf2`) da pasta `build` para o drive `RPI-RP2`.
-   * A placa reiniciará automaticamente.
-5. **Visualizar Logs:** Abra o terminal serial na porta COM correta com 115200 baud. Observe as mensagens de inicialização, conexão Wi-Fi e o endereço IP.
-6. **Testar:**
-   * Após a mensagem "Servidor OK, Ouvindo..." e o IP ser exibido, acesse o endereço IP do Pico W em um navegador na mesma rede Wi-Fi.
-   * Interaja com o Joystick e os Botões A/B na placa para ver os dados simulados mudarem no Display OLED e na página web (que deve atualizar via JavaScript a cada 2 segundos).
-   * Clique nos botões "LIGAR"/"DESLIGAR" na página web para "Irrigação" e "Luz Artificial" e observe a Matriz de LEDs e o LED RGB na placa mudarem.
+   * Conecte a BitDogLab ao computador. Para entrar no modo BOOTSEL, pressione e segure o botão físico correspondente ao `BOOTSEL_BUTTON_PIN` (se configurado) ou o botão BOOTSEL da placa (geralmente próximo ao micro-USB) enquanto conecta o cabo USB (ou reinicie).
+   * Copie o arquivo `.uf2` gerado (ex: `pico_webserver.uf2`) da pasta `build` para o drive `RPI-RP2` que aparece.
+   * A placa reiniciará automaticamente com o novo firmware.
+5. **Visualizar Logs:** Abra um terminal serial (ex: Monitor Serial do VS Code) configurado para a porta COM correta do Pico e **115200 baud**. Observe as mensagens de inicialização, conexão Wi-Fi e o endereço IP obtido.
+6. **Testar a Aplicação:**
+   * Após a mensagem "Servidor OK, Aguardando..." e o IP ser exibido, abra um navegador (em computador ou celular) conectado à mesma rede Wi-Fi e digite o endereço IP do Pico W (ex: `http://192.168.1.XX`).
+   * Observe a página web se atualizar automaticamente a cada 2 segundos com os dados reais dos sensores (DHT22, LDR) e o nível do reservatório (Joystick).
+   * Interaja com o Joystick para alterar o nível do reservatório e veja a atualização na página e o alerta do buzzer.
+   * Clique nos botões "LIGAR"/"DESLIGAR" na página web para "Irrigação" e "Luz Artificial". Observe a Matriz de LEDs e o LED RGB integrarem o feedback.
+   * Pressione o Botão A para alternar o estado de luminosidade (se a lógica ainda usa o botão A para simulação).
 
 ## Estrutura do Código
 
 ```
 .
 ├── include/
-│   ├── config.h            # Definições de pinos e constantes
+│   ├── hardware_config.h   # Definições de pinos, constantes e buffers
 │   ├── display.h           # Headers para display OLED
 │   ├── buttons.h
 │   ├── joystick.h
 │   ├── rgb_led.h
 │   ├── led_matrix.h
-│   └── lib/
-│       └── ssd1306/        # Biblioteca do driver SSD1306
+│   ├── dht22.h             # Header para o sensor DHT22
+│   ├── ldr.h               # Header para o sensor LDR
+│   ├── buzzer.h            # Header para o Buzzer
+│   └── lib/                # Bibliotecas externas (SSD1306)
+│       └── ssd1306/
 │           ├── ssd1306.c
 │           ├── ssd1306.h
-│           └── font.h  
+│           └── font.h
+├── src/                    # Implementações dos módulos
 │   ├── display.c
 │   ├── buttons.c
 │   ├── joystick.c
 │   ├── rgb_led.c
 │   ├── led_matrix.c
-│   └── (outros módulos como buzzer.c se implementado)
-├── /pio/
-│   └── led_matrix.pio      # Programa PIO para a matriz de LEDs
-├── main.c                  # Lógica principal, servidor web, loop
-├── lwipopts.h              # Configurações da LwIP (importante!)
+│   ├── dht22.c             # Código do sensor DHT22
+│   ├── ldr.c               # Código do sensor LDR
+│   └── buzzer.c            # Código do Buzzer
+├── pio_programs/           # Programas PIO Assembly (se em pasta separada)
+│   └── led_matrix.pio
+├── main.c                  # Lógica principal, servidor web, loop de execução
+├── lwipopts.h              # Configurações da LwIP (TCP/IP)
 ├── CMakeLists.txt          # Script de build do CMake
-└── pico_sdk_import.cmake   # Padrão do SDK
+└── pico_sdk_import.cmake   # Padrão do Pico SDK
 ```
 
 ## Demonstrativo em Vídeo
 
-[[Link para o seu Vídeo de Demonstração da Atividade 1]](https://drive.google.com/drive/folders/1CdSdQ_Fl-S2tXVT6iayEbYfwUgxTDNqq?usp=sharing)
+[[Link para o seu Vídeo de Demonstração (Atividade 2 / Final)]](https://drive.google.com/drive/folders/1CdSdQ_Fl-S2tXVT6iayEbYfwUgxTDNqq?usp=sharing)

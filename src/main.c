@@ -297,8 +297,8 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
             "<!DOCTYPE html><html lang=\"pt-BR\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" // META REFRESH REMOVIDO
             "<title>Estação Agro Pico W </title>"
             "<style>body{font-family:Arial,sans-serif;margin:0;padding:20px;background-color:#eef3e8;color:#333}.container{max-width:800px;margin:20px auto;background-color:#fff;padding:20px;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,0.1)}header{text-align:center;margin-bottom:25px;border-bottom:2px solid #4caf50;padding-bottom:15px}header h1{color:#38761d;font-size:2.2em;margin:0}.grid-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:20px}.sensor-card{background-color:#f9f9f9;padding:15px;border-radius:6px;border-left:5px solid #66bb6a; text-align:center;}.sensor-card h2{font-size:1.1em;color:#1b5e20;margin-top:0;margin-bottom:8px}.sensor-card p{margin:5px 0;font-size:0.95em}.value{font-weight:bold;font-size:1.2em;color:#2e7d32}.unit{font-size:0.8em;color:#555}button{font-size:0.8em;padding:6px 10px;margin:5px 2px; border-radius:4px; border:1px solid #ccc; background-color:#f0f0f0; cursor:pointer; min-width:50px;} button:hover{background-color:#e0e0e0;}footer{text-align:center;margin-top:30px;font-size:0.9em;color:#777}</style>"
-            "</head><body><div class=\"container\"><header><h1>Monitor Agrícola Inteligente</h1><p style=\"font-size:0.9em; color:#555;\">Fase 1: Simulação</p></header>"
-            "<h2>Condições Atuais (Simuladas)</h2><div class=\"grid-container\">"
+            "</head><body><div class=\"container\"><header><h1>Monitor Agrícola Inteligente</h1><p style=\"font-size:0.9em; color:#555;\">Fase 2</p></header>"
+            "<h2>Condições Atuais</h2><div class=\"grid-container\">"
             "<div class=\"sensor-card\"><h2>Temperatura Ar</h2><p><span class=\"value\" id=\"temp-ar\">%.1f</span><span class=\"unit\">°C</span></p></div>" // ID adicionado
             "<div class=\"sensor-card\"><h2>Umidade Ar</h2><p><span class=\"value\" id=\"umid-ar\">%.1f</span><span class=\"unit\">%%</span></p></div>" // ID adicionado
             "<div class=\"sensor-card\"><h2>Luminosidade</h2><p><span class=\"value\" id=\"luminosidade\">%s</span></p></div>"         // ID adicionado
@@ -340,7 +340,7 @@ static err_t tcp_server_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, er
             "    })"
             "    .catch(err => console.error('Erro ao buscar dados:', err));"
             "}"
-            "// Função para recarregar a página a cada 0.5 segundos"
+            "// Função para recarregar a página a cada 5 segundos"
             "setInterval(function(){location.href = \"/\"; }, 5000);"
             "window.onload = updateValues;" // Atualiza assim que a página carrega também
             "</script>"
